@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_export.dart';
 import '../../widgets/app_navigation.dart';
+import '../../core/services/mock_database_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -99,6 +100,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _appState = 3; // Switching to Dispatching Radar
     });
     _radarController.repeat();
+    
+    // Register the job request in the shared MockDatabaseService!
+    MockDatabaseService().createBooking(
+      destination: _destination.isNotEmpty ? _destination : 'Union Buildings, Arcadia',
+      rideType: _selectedRideType,
+      price: _selectedRideType == 'wave_go' 
+          ? 'R 65.00' 
+          : (_selectedRideType == 'wave_premium' ? 'R 115.00' : 'R 160.00'),
+      eta: _selectedRideType == 'wave_go' 
+          ? '3 mins' 
+          : (_selectedRideType == 'wave_premium' ? '2 mins' : '5 mins'),
+    );
     
     _dispatchTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) {
