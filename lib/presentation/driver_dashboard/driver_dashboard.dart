@@ -15,6 +15,7 @@ class DriverDashboardScreen extends StatefulWidget {
 
 class _DriverDashboardScreenState extends State<DriverDashboardScreen> with TickerProviderStateMixin {
   final MockDatabaseService _db = MockDatabaseService();
+  bool _isCallActive = false;
   
   // Simulated Map Positions & Drift
   late AnimationController _pulseController;
@@ -146,6 +147,21 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> with Tick
             right: 0,
             child: _buildInteractiveConsole(theme),
           ),
+
+          // 6. VoIP Calling Simulator Overlay
+          if (_isCallActive)
+            Positioned.fill(
+              child: VoipCallOverlayWidget(
+                contactName: 'Marcus Osei-Bonsu',
+                contactAvatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', // Premium passenger fallback photo
+                contactRole: 'Passenger',
+                onHangUp: () {
+                  setState(() {
+                    _isCallActive = false;
+                  });
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -838,11 +854,26 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> with Tick
               // Contact icons
               IconButton(
                 icon: const Icon(Icons.message_rounded, color: Colors.blue, size: 20),
-                onPressed: () {},
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (_) => const SimulatedChatSheetWidget(
+                      contactName: 'Marcus Osei-Bonsu',
+                      contactAvatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+                      contactRole: 'Passenger',
+                    ),
+                  );
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.call_rounded, color: AppTheme.accent, size: 20),
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    _isCallActive = true;
+                  });
+                },
               ),
             ],
           ),
