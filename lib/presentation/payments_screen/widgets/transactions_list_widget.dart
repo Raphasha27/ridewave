@@ -311,7 +311,7 @@ class TransactionsListWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$${(tx['amount'] as double).abs().toStringAsFixed(2)}',
+                  'R ${(tx['amount'] as double).abs().toStringAsFixed(2)}',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
