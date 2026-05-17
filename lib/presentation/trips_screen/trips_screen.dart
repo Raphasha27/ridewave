@@ -1,6 +1,7 @@
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_export.dart';
 import '../../widgets/app_navigation.dart';
+import '../../core/services/mock_database_service.dart';
 
 class TripsScreen extends StatefulWidget {
   const TripsScreen({super.key});
@@ -12,48 +13,7 @@ class TripsScreen extends StatefulWidget {
 class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStateMixin {
   final int _navIndex = 1;
   late TabController _tabController;
-
-  final List<Map<String, dynamic>> _completedTrips = [
-    {
-      'id': 'trip_1',
-      'date': 'Yesterday, 17:42',
-      'driver': 'Gift Ndlovu',
-      'driverRating': 4.90,
-      'car': 'Silver Nissan Almera',
-      'cost': 'R 72.00',
-      'distance': '8.2 km',
-      'duration': '14 mins',
-      'pickup': 'Hatfield Plaza, Hatfield',
-      'dropoff': 'Union Buildings, Arcadia',
-      'type': 'Wave Go',
-    },
-    {
-      'id': 'trip_2',
-      'date': '14 May 2026, 08:15',
-      'driver': 'Lerato Khumalo',
-      'driverRating': 4.95,
-      'car': 'White Toyota Quest',
-      'cost': 'R 125.00',
-      'distance': '14.5 km',
-      'duration': '22 mins',
-      'pickup': 'Pretoria Central Station, CBD',
-      'dropoff': 'Menlyn Mall, Pretoria East',
-      'type': 'Wave Premium',
-    },
-    {
-      'id': 'trip_3',
-      'date': '11 May 2026, 21:30',
-      'driver': 'Tshepo Mokwena',
-      'driverRating': 4.82,
-      'car': 'Blue VW Polo',
-      'cost': 'R 55.00',
-      'distance': '5.1 km',
-      'duration': '9 mins',
-      'pickup': 'Brooklyn Mall, Brooklyn',
-      'dropoff': 'University of Pretoria, Hatfield',
-      'type': 'Wave Go',
-    },
-  ];
+  final MockDatabaseService _db = MockDatabaseService();
 
   final List<Map<String, dynamic>> _cancelledTrips = [
     {
@@ -72,16 +32,36 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
     },
   ];
 
+  int get tripsDone => _db.completedTrips.value.length + 244;
+
+  String get totalSpent {
+    double base = 8168.00; // 8420 - 72 - 125 - 55
+    double sum = 0.0;
+    for (var trip in _db.completedTrips.value) {
+      String costStr = trip['cost'].toString().replaceAll('R', '').replaceAll(' ', '');
+      sum += double.tryParse(costStr) ?? 0.0;
+    }
+    return 'R ${sum > 0 ? (base + sum).toStringAsFixed(2) : '8,420'}';
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    
+    // Listen to database changes to trigger setStates
+    _db.completedTrips.addListener(_onDbChanged);
   }
 
   @override
   void dispose() {
+    _db.completedTrips.removeListener(_onDbChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onDbChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -106,9 +86,14 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
         ),
       ),
       body: SafeArea(
-        child: isTablet
-            ? _buildTabletLayout(context, theme)
-            : _buildPhoneLayout(context, theme),
+        child: ValueListenableBuilder<List<Map<String, dynamic>>>(
+          valueListenable: _db.completedTrips,
+          builder: (context, trips, child) {
+            return isTablet
+                ? _buildTabletLayout(context, theme, trips)
+                : _buildPhoneLayout(context, theme, trips);
+          },
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: AppNavigation(
@@ -123,7 +108,7 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildPhoneLayout(BuildContext context, ThemeData theme) {
+  Widget _buildPhoneLayout(BuildContext context, ThemeData theme, List<Map<String, dynamic>> completedTrips) {
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
         SliverToBoxAdapter(
@@ -168,14 +153,14 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildTripsList(_completedTrips, false),
+          _buildTripsList(completedTrips, false),
           _buildTripsList(_cancelledTrips, true),
         ],
       ),
     );
   }
 
-  Widget _buildTabletLayout(BuildContext context, ThemeData theme) {
+  Widget _buildTabletLayout(BuildContext context, ThemeData theme, List<Map<String, dynamic>> completedTrips) {
     return Row(
       children: [
         // Left Column: Stats & Chart
@@ -217,7 +202,7 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildTripsList(_completedTrips, false),
+                    _buildTripsList(completedTrips, false),
                     _buildTripsList(_cancelledTrips, true),
                   ],
                 ),
@@ -236,7 +221,7 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
         Expanded(
           child: _buildStatCard(
             title: 'Trips Done',
-            value: '247',
+            value: '$tripsDone',
             icon: 'local_taxi',
             color: AppTheme.primary,
           ),
@@ -245,7 +230,7 @@ class _TripsScreenState extends State<TripsScreen> with SingleTickerProviderStat
         Expanded(
           child: _buildStatCard(
             title: 'Total Spent',
-            value: 'R 8,420',
+            value: totalSpent,
             icon: 'payment',
             color: AppTheme.accent,
           ),

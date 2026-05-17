@@ -62,6 +62,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildDriverSwitchCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E1E34), AppTheme.primary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withAlpha(50),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.pushReplacementNamed(context, AppRoutes.driverDashboard);
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent.withAlpha(38),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const CustomIconWidget(
+                    iconName: 'local_taxi',
+                    color: AppTheme.accent,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Driver Portal',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Go online, accept trips, and earn cash',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white70,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPhoneLayout(BuildContext context, ThemeData theme) {
     return CustomScrollView(
       slivers: [
@@ -72,6 +148,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 16),
+                _buildDriverSwitchCard(context),
                 const SizedBox(height: 16),
                 ProfileStatsWidget(riderData: _riderData),
                 const SizedBox(height: 20),
@@ -110,6 +188,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
+                      _buildDriverSwitchCard(context),
+                      const SizedBox(height: 20),
                       ProfileStatsWidget(riderData: _riderData),
                       const SizedBox(height: 20),
                       ProfileActivityChartWidget(),
