@@ -53,11 +53,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: AppNavigation(
           currentIndex: _navIndex,
           onTap: (i) {
-            setState(() => _navIndex = i);
-            if (i == 2) Navigator.pushNamed(context, AppRoutes.paymentsScreen);
-            if (i == 0) {
-              Navigator.pushNamed(context, AppRoutes.signUpLoginScreen);
-            }
+            if (i == 0) Navigator.pushReplacementNamed(context, AppRoutes.homeScreen);
+            if (i == 1) Navigator.pushReplacementNamed(context, AppRoutes.tripsScreen);
+            if (i == 2) Navigator.pushReplacementNamed(context, AppRoutes.paymentsScreen);
           },
         ),
       ),

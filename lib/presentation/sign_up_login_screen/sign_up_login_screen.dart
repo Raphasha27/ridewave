@@ -94,7 +94,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
       // TODO: Validate OTP with backend auth service
       Navigator.pushNamedAndRemoveUntil(
         context,
-        AppRoutes.profileScreen,
+        AppRoutes.homeScreen,
         (route) => false,
       );
     });
