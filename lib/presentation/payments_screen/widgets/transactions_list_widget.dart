@@ -5,24 +5,36 @@ import '../../../widgets/custom_icon_widget.dart';
 import '../../../widgets/status_badge_widget.dart';
 import '../../../widgets/empty_state_widget.dart';
 
+import '../../../core/services/mock_database_service.dart';
+
 class TransactionsListWidget extends StatelessWidget {
   const TransactionsListWidget({super.key});
 
-  static final List<Map<String, dynamic>> _transactionMaps = [
-    {
-      'id': 'TXN-8842',
-      'type': 'ride',
-      'icon': 'local_taxi',
-      'iconColor': 0xFF1A1A2E,
-      'iconBg': 0xFFE8E8FF,
-      'title': 'RideWave Standard',
-      'subtitle': 'Downtown → Airport Terminal 2',
-      'amount': -34.50,
-      'date': 'Today, 11:20 AM',
-      'status': 'completed',
-      'paymentMethod': 'Visa •••• 8890',
-    },
-    {
+  List<Map<String, dynamic>> _getCombinedTransactions() {
+    final db = MockDatabaseService();
+    final List<Map<String, dynamic>> txns = [];
+
+    // Map dynamic completed trips
+    for (var trip in db.completedTrips.value) {
+      String costStr = trip['cost'].toString().replaceAll('R', '').replaceAll(' ', '');
+      double amt = double.tryParse(costStr) ?? 0.0;
+      txns.add({
+        'id': 'TXN-${trip['id'].toString().replaceAll('trip_', '')}',
+        'type': 'ride',
+        'icon': 'local_taxi',
+        'iconColor': 0xFF1A1A2E,
+        'iconBg': 0xFFE8E8FF,
+        'title': trip['type'] ?? 'RideWave Standard',
+        'subtitle': '${trip['pickup']} → ${trip['dropoff']}',
+        'amount': -amt,
+        'date': trip['date'] ?? 'Just now',
+        'status': 'completed',
+        'paymentMethod': 'Wallet',
+      });
+    }
+
+    // Add static non-ride transactions to enrich the list
+    txns.add({
       'id': 'TXN-8841',
       'type': 'topup',
       'icon': 'add_circle',
@@ -34,34 +46,9 @@ class TransactionsListWidget extends StatelessWidget {
       'date': 'Today, 09:05 AM',
       'status': 'completed',
       'paymentMethod': 'Mastercard •••• 4421',
-    },
-    {
-      'id': 'TXN-8839',
-      'type': 'ride',
-      'icon': 'local_taxi',
-      'iconColor': 0xFF1A1A2E,
-      'iconBg': 0xFFE8E8FF,
-      'title': 'RideWave Premium',
-      'subtitle': 'Riverside Park → Convention Center',
-      'amount': -52.75,
-      'date': 'Yesterday, 7:42 PM',
-      'status': 'completed',
-      'paymentMethod': 'Wallet',
-    },
-    {
-      'id': 'TXN-8836',
-      'type': 'ride',
-      'icon': 'local_taxi',
-      'iconColor': 0xFF1A1A2E,
-      'iconBg': 0xFFE8E8FF,
-      'title': 'RideWave Standard',
-      'subtitle': 'Home → South Congress Ave',
-      'amount': -18.25,
-      'date': 'Yesterday, 2:15 PM',
-      'status': 'cancelled',
-      'paymentMethod': 'Wallet',
-    },
-    {
+    });
+
+    txns.add({
       'id': 'TXN-8831',
       'type': 'refund',
       'icon': 'refresh',
@@ -73,34 +60,9 @@ class TransactionsListWidget extends StatelessWidget {
       'date': 'May 14, 10:30 AM',
       'status': 'completed',
       'paymentMethod': 'Wallet',
-    },
-    {
-      'id': 'TXN-8829',
-      'type': 'ride',
-      'icon': 'local_taxi',
-      'iconColor': 0xFF1A1A2E,
-      'iconBg': 0xFFE8E8FF,
-      'title': 'RideWave Standard',
-      'subtitle': 'Barton Springs → UT Campus',
-      'amount': -22.00,
-      'date': 'May 14, 09:15 AM',
-      'status': 'cancelled',
-      'paymentMethod': 'Visa •••• 8890',
-    },
-    {
-      'id': 'TXN-8820',
-      'type': 'ride',
-      'icon': 'electric_car',
-      'iconColor': 0xFF388E3C,
-      'iconBg': 0xFFE8F5E9,
-      'title': 'RideWave Electric',
-      'subtitle': 'Tech District → Zilker Park',
-      'amount': -41.00,
-      'date': 'May 13, 6:00 PM',
-      'status': 'completed',
-      'paymentMethod': 'Wallet',
-    },
-    {
+    });
+
+    txns.add({
       'id': 'TXN-8815',
       'type': 'topup',
       'icon': 'add_circle',
@@ -112,151 +74,160 @@ class TransactionsListWidget extends StatelessWidget {
       'date': 'May 12, 3:00 PM',
       'status': 'completed',
       'paymentMethod': 'Visa •••• 8890',
-    },
-  ];
+    });
+
+    return txns;
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_transactionMaps.isEmpty) {
-      return const EmptyStateWidget(
-        iconName: 'receipt',
-        title: 'No transactions yet',
-        description:
-            'Your ride receipts and wallet activity will appear here after your first trip.',
-      );
-    }
+    return ValueListenableBuilder<List<Map<String, dynamic>>>(
+      valueListenable: MockDatabaseService().completedTrips,
+      builder: (context, trips, child) {
+        final transactions = _getCombinedTransactions();
+        
+        if (transactions.isEmpty) {
+          return const EmptyStateWidget(
+            iconName: 'receipt',
+            title: 'No transactions yet',
+            description:
+                'Your ride receipts and wallet activity will appear here after your first trip.',
+          );
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-      itemCount: _transactionMaps.length,
-      itemBuilder: (context, index) {
-        final tx = _transactionMaps[index];
-        final isPositive = (tx['amount'] as double) > 0;
-        final isCancelled = tx['status'] == 'cancelled';
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+          itemCount: transactions.length,
+          itemBuilder: (context, index) {
+            final tx = transactions[index];
+            final isPositive = (tx['amount'] as double) > 0;
+            final isCancelled = tx['status'] == 'cancelled';
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: GestureDetector(
-            onTap: () {
-              _showReceiptSheet(context, tx);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceLight,
-                borderRadius: BorderRadius.circular(20),
-                border: Border(
-                  left: BorderSide(
-                    color: isCancelled
-                        ? AppTheme.error.withAlpha(128)
-                        : isPositive
-                        ? AppTheme.accent.withAlpha(128)
-                        : AppTheme.primary.withAlpha(77),
-                    width: 3,
-                  ),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(10),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Color(tx['iconBg'] as int),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: CustomIconWidget(
-                        iconName: tx['icon'] as String,
-                        color: Color(tx['iconColor'] as int),
-                        size: 22,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GestureDetector(
+                onTap: () {
+                  _showReceiptSheet(context, tx);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceLight,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border(
+                      left: BorderSide(
+                        color: isCancelled
+                            ? AppTheme.error.withAlpha(128)
+                            : isPositive
+                            ? AppTheme.accent.withAlpha(128)
+                            : AppTheme.primary.withAlpha(77),
+                        width: 3,
                       ),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(10),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                tx['title'] as String,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.primary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              isPositive
-                                  ? '+\$${(tx['amount'] as double).toStringAsFixed(2)}'
-                                  : '-\$${(tx['amount'] as double).abs().toStringAsFixed(2)}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: isPositive
-                                    ? AppTheme.success
-                                    : isCancelled
-                                    ? AppTheme.onSurfaceMuted
-                                    : AppTheme.primary,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                                decoration: isCancelled
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                              ),
-                            ),
-                          ],
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Color(tx['iconBg'] as int),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          tx['subtitle'] as String,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: AppTheme.onSurfaceMuted,
+                        child: Center(
+                          child: CustomIconWidget(
+                            iconName: tx['icon'] as String,
+                            color: Color(tx['iconColor'] as int),
+                            size: 22,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-                        Row(
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    tx['title'] as String,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.primary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  isPositive
+                                      ? '+R ${(tx['amount'] as double).toStringAsFixed(2)}'
+                                      : '-R ${(tx['amount'] as double).abs().toStringAsFixed(2)}',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: isPositive
+                                        ? AppTheme.success
+                                        : isCancelled
+                                        ? AppTheme.onSurfaceMuted
+                                        : AppTheme.primary,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    decoration: isCancelled
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
                             Text(
-                              tx['date'] as String,
+                              tx['subtitle'] as String,
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: AppTheme.onSurfaceMuted,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 8),
-                            StatusBadgeWidget(
-                              label: isCancelled ? 'Cancelled' : 'Completed',
-                              status: isCancelled
-                                  ? RideStatus.cancelled
-                                  : RideStatus.completed,
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Text(
+                                  tx['date'] as String,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11,
+                                    color: AppTheme.onSurfaceMuted,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                StatusBadgeWidget(
+                                  label: isCancelled ? 'Cancelled' : 'Completed',
+                                  status: isCancelled
+                                      ? RideStatus.cancelled
+                                      : RideStatus.completed,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
