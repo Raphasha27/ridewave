@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/custom_icon_widget.dart';
+import '../../../core/services/mock_database_service.dart';
 
 class WalletBalanceHeroWidget extends StatelessWidget {
   const WalletBalanceHeroWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final db = MockDatabaseService();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -81,15 +83,20 @@ class WalletBalanceHeroWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Text(
-            '\$124.50',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 38,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              height: 1.1,
-            ),
+          ValueListenableBuilder<double>(
+            valueListenable: db.walletBalance,
+            builder: (context, balance, child) {
+              return Text(
+                'R ${balance.toStringAsFixed(2)}',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 38,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  height: 1.1,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 4),
           Text(
