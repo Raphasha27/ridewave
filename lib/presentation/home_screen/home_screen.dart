@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // 3 = Searching/Dispatching Radar Screen
   // 4 = Driver Matched/Arriving Screen
   int _appState = 0; 
+  bool _isCallActive = false;
 
   String _destination = '';
   String _selectedRideType = 'wave_go';
@@ -170,6 +171,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             right: 0,
             child: _buildInteractiveSheet(theme, isTablet),
           ),
+
+          // 5. VoIP Calling Simulator Overlay
+          if (_isCallActive)
+            Positioned.fill(
+              child: VoipCallOverlayWidget(
+                contactName: _matchedDriver['name'] as String,
+                contactAvatarUrl: _matchedDriver['avatarUrl'] as String,
+                contactRole: 'Driver',
+                onHangUp: () {
+                  setState(() {
+                    _isCallActive = false;
+                  });
+                },
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: _appState <= 1 
@@ -1185,8 +1201,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   icon: 'message',
                   label: 'Message',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Chat window opened with Sipho')),
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => SimulatedChatSheetWidget(
+                        contactName: _matchedDriver['name'] as String,
+                        contactAvatarUrl: _matchedDriver['avatarUrl'] as String,
+                        contactRole: 'Driver',
+                      ),
                     );
                   },
                 ),
@@ -1197,9 +1220,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   icon: 'call',
                   label: 'Call',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Dialing Sipho at ${_matchedDriver['phone']}')),
-                    );
+                    setState(() {
+                      _isCallActive = true;
+                    });
                   },
                 ),
               ),
