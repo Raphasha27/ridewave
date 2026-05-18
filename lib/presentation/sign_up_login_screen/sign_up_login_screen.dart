@@ -202,7 +202,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
             ),
             const SizedBox(width: 10),
             Text(
-              'RideWave',
+              'SupplyWave',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,

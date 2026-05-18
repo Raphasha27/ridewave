@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/custom_icon_widget.dart';
 
@@ -13,7 +14,7 @@ class AddPaymentMethodSheetWidget extends StatefulWidget {
 }
 
 class _AddPaymentMethodSheetWidgetState
-    extends State<AddPaymentMethodSheetWidget> {
+    extends State<AddPaymentMethodSheetWidget> with TickerProviderStateMixin {
   // TODO: Replace with Riverpod/Bloc for production state management
   int _selectedType = 0; // 0=card, 1=wallet topup
   bool _isLoading = false;
@@ -24,12 +25,56 @@ class _AddPaymentMethodSheetWidgetState
   final _cvvController = TextEditingController();
   bool _obscureCvv = true;
 
+  // Scanner Simulator properties
+  bool _isScanning = false;
+  late AnimationController _scannerLaserController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scannerLaserController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  void _startMockScan() {
+    _scannerLaserController.repeat(reverse: true);
+    
+    // Automatically complete mock scan after 2.5 seconds
+    Timer(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _cardNumberController.text = '5412 7599 2470 1180';
+          _cardNameController.text = 'Marcus Osei-Bonsu';
+          _expiryController.text = '09/29';
+          _cvvController.text = '382';
+          _isScanning = false;
+        });
+        _scannerLaserController.stop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Text('Card scanned successfully! Autofilled details.'),
+              ],
+            ),
+            backgroundColor: AppTheme.primary,
+          ),
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
     _cardNumberController.dispose();
     _cardNameController.dispose();
     _expiryController.dispose();
     _cvvController.dispose();
+    _scannerLaserController.dispose();
     super.dispose();
   }
 
@@ -40,111 +85,208 @@ class _AddPaymentMethodSheetWidgetState
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
+        height: 520, // Fixed height to allow clean Scanner overlay mapping
         decoration: const BoxDecoration(
           color: AppTheme.surfaceLight,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.outlineLight,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Add Payment Method',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Type selector
-              Row(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _TypeChip(
-                    label: 'Credit / Debit Card',
-                    iconName: 'credit_card',
-                    isSelected: _selectedType == 0,
-                    onTap: () => setState(() => _selectedType = 0),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppTheme.outlineLight,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  _TypeChip(
-                    label: 'Top Up Wallet',
-                    iconName: 'wallet',
-                    isSelected: _selectedType == 1,
-                    onTap: () => setState(() => _selectedType = 1),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Add Payment Method',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Type selector
+                  Row(
+                    children: [
+                      _TypeChip(
+                        label: 'Credit / Debit Card',
+                        iconName: 'credit_card',
+                        isSelected: _selectedType == 0,
+                        onTap: () => setState(() => _selectedType = 0),
+                      ),
+                      const SizedBox(width: 10),
+                      _TypeChip(
+                        label: 'Top Up Wallet',
+                        iconName: 'wallet',
+                        isSelected: _selectedType == 1,
+                        onTap: () => setState(() => _selectedType = 1),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (_selectedType == 0) _buildCardForm() else _buildTopUpForm(),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: GestureDetector(
+                      onTap: _isLoading ? null : _submit,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 120),
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primary.withAlpha(77),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const CustomIconWidget(
+                                      iconName: 'add',
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _selectedType == 0
+                                          ? 'Add Card'
+                                          : 'Top Up Wallet',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+            if (_isScanning) _buildScannerOverlay(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScannerOverlay() {
+    return Positioned.fill(
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: Container(
+          color: const Color(0xFF0F0F1E).withAlpha(245),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'CREDIT CARD SCANNER',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF00FFCC),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isScanning = false;
+                        });
+                        _scannerLaserController.stop();
+                      },
+                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              
+              // Viewfinder Rect
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 280,
+                    height: 170,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white38, width: 2.5),
+                    ),
+                  ),
+                  // Glowing Neon Green Laser Line
+                  AnimatedBuilder(
+                    animation: _scannerLaserController,
+                    builder: (context, child) {
+                      double topOffset = _scannerLaserController.value * 150;
+                      return Positioned(
+                        top: 10 + topOffset,
+                        child: Container(
+                          width: 260,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00FFCC),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF00FFCC).withAlpha(200),
+                                blurRadius: 10,
+                                spreadRadius: 1.5,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              if (_selectedType == 0) _buildCardForm() else _buildTopUpForm(),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: GestureDetector(
-                  onTap: _isLoading ? null : _submit,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
-                    height: 54,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withAlpha(77),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const CustomIconWidget(
-                                  iconName: 'add',
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _selectedType == 0
-                                      ? 'Add Card'
-                                      : 'Top Up Wallet',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
+              const SizedBox(height: 24),
+              Text(
+                'Hold card within frame to scan',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 8),
+              const Spacer(),
             ],
           ),
         ),
@@ -163,6 +305,19 @@ class _AddPaymentMethodSheetWidgetState
             hint: '•••• •••• •••• ••••',
             iconName: 'credit_card',
             keyboardType: TextInputType.number,
+            suffixIcon: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isScanning = true;
+                });
+                _startMockScan();
+              },
+              child: const CustomIconWidget(
+                iconName: 'photo_camera',
+                color: AppTheme.primary,
+                size: 20,
+              ),
+            ),
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(16),

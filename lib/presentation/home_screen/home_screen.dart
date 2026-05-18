@@ -6,6 +6,8 @@ import '../../widgets/app_navigation.dart';
 import '../../core/services/mock_database_service.dart';
 import '../../widgets/voip_call_overlay_widget.dart';
 import '../../widgets/simulated_chat_sheet_widget.dart';
+import '../../widgets/in_app_notification_banner_widget.dart';
+import '../../widgets/developer_cheat_console_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -186,6 +188,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 },
               ),
             ),
+
+          // 6. Developer Simulation Cheat Console HUD
+          const Positioned.fill(
+            child: DeveloperCheatConsoleWidget(),
+          ),
+
+          // 7. Global In-App Banner Notification Overlay
+          ValueListenableBuilder<Map<String, String>?>(
+            valueListenable: MockDatabaseService().activeNotification,
+            builder: (context, notification, child) {
+              if (notification == null) return const SizedBox.shrink();
+              return Positioned(
+                top: 20,
+                left: 0,
+                right: 0,
+                child: InAppNotificationBannerWidget(
+                  title: notification['title'] ?? 'Notification',
+                  body: notification['body'] ?? '',
+                  iconName: notification['icon'] ?? 'notifications',
+                  onClose: () {
+                    MockDatabaseService().activeNotification.value = null;
+                  },
+                ),
+              );
+            },
+          ),
         ],
       ),
       bottomNavigationBar: _appState <= 1 
@@ -1006,7 +1034,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           const SizedBox(height: 24),
           
           Text(
-            'Finding Your RideWave...',
+            'Finding Your SupplyWave...',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 18,
               fontWeight: FontWeight.w700,

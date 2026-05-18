@@ -20,7 +20,7 @@ class _PaymentMethodsListWidgetState extends State<PaymentMethodsListWidget> {
   static final List<Map<String, dynamic>> _methodMaps = [
     {
       'type': 'wallet',
-      'label': 'RideWave Wallet',
+      'label': 'SupplyWave Wallet',
       'detail': '\$124.50 balance',
       'icon': 'wallet',
       'iconColor': 0xFF1A1A2E,

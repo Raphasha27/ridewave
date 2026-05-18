@@ -5,6 +5,8 @@ import '../../core/app_export.dart';
 import '../../core/services/mock_database_service.dart';
 import '../../widgets/voip_call_overlay_widget.dart';
 import '../../widgets/simulated_chat_sheet_widget.dart';
+import '../../widgets/in_app_notification_banner_widget.dart';
+import '../../widgets/developer_cheat_console_widget.dart';
 
 class DriverDashboardScreen extends StatefulWidget {
   const DriverDashboardScreen({super.key});
@@ -162,6 +164,32 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> with Tick
                 },
               ),
             ),
+
+          // 7. Developer Simulation Cheat Console HUD
+          const Positioned.fill(
+            child: DeveloperCheatConsoleWidget(),
+          ),
+
+          // 8. Global In-App Banner Notification Overlay
+          ValueListenableBuilder<Map<String, String>?>(
+            valueListenable: _db.activeNotification,
+            builder: (context, notification, child) {
+              if (notification == null) return const SizedBox.shrink();
+              return Positioned(
+                top: 20,
+                left: 0,
+                right: 0,
+                child: InAppNotificationBannerWidget(
+                  title: notification['title'] ?? 'Notification',
+                  body: notification['body'] ?? '',
+                  iconName: notification['icon'] ?? 'notifications',
+                  onClose: () {
+                    _db.activeNotification.value = null;
+                  },
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

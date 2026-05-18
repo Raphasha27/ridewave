@@ -24,7 +24,7 @@ class TransactionsListWidget extends StatelessWidget {
         'icon': 'local_taxi',
         'iconColor': 0xFF1A1A2E,
         'iconBg': 0xFFE8E8FF,
-        'title': trip['type'] ?? 'RideWave Standard',
+        'title': trip['type'] ?? 'SupplyWave Standard',
         'subtitle': '${trip['pickup']} → ${trip['dropoff']}',
         'amount': -amt,
         'date': trip['date'] ?? 'Just now',

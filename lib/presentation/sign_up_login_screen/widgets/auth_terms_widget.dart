@@ -16,7 +16,7 @@ class AuthTermsWidget extends StatelessWidget {
           height: 1.5,
         ),
         children: [
-          const TextSpan(text: 'By continuing, you agree to RideWave\'s '),
+          const TextSpan(text: 'By continuing, you agree to SupplyWave\'s '),
           TextSpan(
             text: 'Terms of Service',
             style: GoogleFonts.plusJakartaSans(

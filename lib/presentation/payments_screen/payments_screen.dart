@@ -1,6 +1,8 @@
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_export.dart';
+import '../../widgets/in_app_notification_banner_widget.dart';
+import '../../core/services/mock_database_service.dart';
 import '../../widgets/app_navigation.dart';
 import './widgets/add_payment_method_sheet_widget.dart';
 import './widgets/payment_methods_list_widget.dart';
@@ -48,10 +50,35 @@ class _PaymentsScreenState extends State<PaymentsScreen>
     final isTablet = MediaQuery.of(context).size.width >= 600;
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
-      body: SafeArea(
-        child: isTablet
-            ? _buildTabletLayout(context)
-            : _buildPhoneLayout(context),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: isTablet
+                ? _buildTabletLayout(context)
+                : _buildPhoneLayout(context),
+          ),
+          
+          // Global In-App Banner Notification Overlay
+          ValueListenableBuilder<Map<String, String>?>(
+            valueListenable: MockDatabaseService().activeNotification,
+            builder: (context, notification, child) {
+              if (notification == null) return const SizedBox.shrink();
+              return Positioned(
+                top: 20,
+                left: 0,
+                right: 0,
+                child: InAppNotificationBannerWidget(
+                  title: notification['title'] ?? 'Notification',
+                  body: notification['body'] ?? '',
+                  iconName: notification['icon'] ?? 'notifications',
+                  onClose: () {
+                    MockDatabaseService().activeNotification.value = null;
+                  },
+                ),
+              );
+            },
+          ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         child: AppNavigation(

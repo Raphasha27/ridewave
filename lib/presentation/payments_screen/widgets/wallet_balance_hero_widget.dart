@@ -53,7 +53,7 @@ class WalletBalanceHeroWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'RideWave Wallet',
+                    'SupplyWave Wallet',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -132,7 +132,7 @@ class WalletBalanceHeroWidget extends StatelessWidget {
                 label: 'Receipts',
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Receipt export initiated. Sent to marcus.osei@ridewave.app!')),
+                    const SnackBar(content: Text('Receipt export initiated. Sent to marcus.osei@SupplyWave.app!')),
                   );
                 },
               ),

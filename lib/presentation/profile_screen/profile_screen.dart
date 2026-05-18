@@ -25,7 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Map<String, dynamic> _riderData = {
     'name': 'Marcus Osei-Bonsu',
     'phone': '+1 (555) 000-0001',
-    'email': 'marcus.osei@ridewave.app',
+    'email': 'marcus.osei@SupplyWave.app',
     'avatarUrl':
         'https://img.rocket.new/generatedImages/rocket_gen_img_11add7eb4-1763294437588.png',
     'avatarSemanticLabel':

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class MockDatabaseService {
   // Singleton pattern
@@ -20,6 +21,9 @@ class MockDatabaseService {
   late ValueNotifier<bool> isDriverOnline;
   late ValueNotifier<String> activeDriverStatus; // 'idle', 'offering', 'navigating_pickup', 'on_trip'
   late ValueNotifier<Map<String, dynamic>?> currentActiveJob;
+
+  // Global system notification state
+  late ValueNotifier<Map<String, String>?> activeNotification;
 
   void _initDefaults() {
     walletBalance = ValueNotifier<double>(345.50);
@@ -75,6 +79,7 @@ class MockDatabaseService {
     isDriverOnline = ValueNotifier<bool>(false);
     activeDriverStatus = ValueNotifier<String>('idle');
     currentActiveJob = ValueNotifier<Map<String, dynamic>?>(null);
+    activeNotification = ValueNotifier<Map<String, String>?>(null);
   }
 
   // Create a new booking from the passenger side
@@ -171,5 +176,23 @@ class MockDatabaseService {
     activeBookings.value = [];
     currentActiveJob.value = null;
     activeDriverStatus.value = 'idle';
+  }
+
+  // Trigger a system-wide banner notification
+  void triggerNotification(String title, String body, {String icon = 'notifications'}) {
+    activeNotification.value = {
+      'title': title,
+      'body': body,
+      'icon': icon,
+    };
+    
+    // Automatically clear banner after 4 seconds
+    Timer(const Duration(seconds: 4), () {
+      if (activeNotification.value != null &&
+          activeNotification.value!['title'] == title &&
+          activeNotification.value!['body'] == body) {
+        activeNotification.value = null;
+      }
+    });
   }
 }
