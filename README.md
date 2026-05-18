@@ -30,7 +30,7 @@ sequenceDiagram
     Driver->>DB: startActiveJobTrip()
     Note over DB: Job status updated to 'on_trip'
     Driver->>DB: completeActiveJob()
-    Note over DB: Deducts R65 from Rider Balance<br/>Adds R65 to Driver Earnings<br/>Adds record to Completed Trips List
+    Note over DB: "Deducts R65 from Rider Balance\nAdds R65 to Driver Earnings\nAdds record to Completed Trips List"
     DB-->>Rider: Balance updates in Payments
     DB-->>Rider: History lists refresh in Trips
 ```
