@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](http://makeapullrequest.com)
 
-SupplyWave is a state-of-the-art, high-fidelity interactive mobility platform built with Flutter. By connecting a responsive passenger portal and a dark-mode driver dispatch terminal via a unified reactive state layer, SupplyWave provides a fully operational, end-to-end dispatch-receive simulation suited for the South African market.
+SupplyWave is a modern, high-fidelity interactive mobility platform built with Flutter. By connecting a responsive passenger portal and a dark-mode driver dispatch terminal via a unified reactive state layer, SupplyWave provides a fully operational, end-to-end dispatch-receive simulation suited for the South African market.
 
 ---
 
@@ -39,10 +39,10 @@ sequenceDiagram
 
 ## 📱 Premium Screen Modules & Dynamic Additions
 
-The application features nine primary, production-grade screens and interactive overlays:
+The application features nine primary, robust screens and interactive overlays:
 
 ### 1. Vector Map Passenger Portal (`HomeScreen`)
-*   **Dynamic Custom Maps**: Renders a custom vector map using high-performance `CustomPainter` lines representing roads, parks, rivers, and a pulsing passenger pin.
+*   **Dynamic Custom Maps**: Renders a custom vector map using efficient `CustomPainter` lines representing roads, parks, rivers, and a pulsing passenger pin.
 *   **Live Moving Drivers**: Places multiple simulated driver markers drifting around Hatfield and Pretoria Central in real time.
 *   **Surge & Ride Options**: Multi-tier pricing structures (*Wave Go*, *Wave Premium*, *Wave XL*) calculating Pretoria Rand fares dynamically.
 
@@ -142,3 +142,6 @@ Your sponsorships keep Kirov Dynamics' research and development running. Join ou
 - **OpenCollective**: [Support Kirov Dynamics](https://opencollective.com/kirov-dynamics)
 
 *Built with ❤️ by Kirov Dynamics.*
+
+
+
