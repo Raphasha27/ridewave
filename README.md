@@ -1,4 +1,6 @@
 # SupplyWave Mobility Ecosystem 🚗🇿🇦
+
+[![CI](https://github.com/Raphasha27/ridewave/actions/workflows/ci-flutter.yml/badge.svg)](https://github.com/Raphasha27/ridewave/actions/workflows/ci-flutter.yml)
 ### Developed for Kirov Dynamics Technology — Pretoria, South Africa
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
